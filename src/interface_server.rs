@@ -1,6 +1,6 @@
+use crate::packer::{LogOn, LogOnRes, User};
 use anyhow::Result;
 use netxclient::prelude::*;
-use packer::*;
 
 //服务器接口,调用服务器需要使用它
 //server interface,it is required to call the server

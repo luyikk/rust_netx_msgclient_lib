@@ -8,10 +8,8 @@ use std::sync::Weak;
 pub trait IClientController {
     // connect 和 disconnect 在你需要的时候你可以实现它
     // connect and disconnect you can implement it when you need it
-
     #[tag(2001)]
     async fn message(&self, nickname: String, msg: String, to_me: bool);
-
     #[tag(3001)]
     async fn ping(&self, nickname: String, time: i64) -> Result<i64>;
 }
