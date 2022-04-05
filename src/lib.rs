@@ -129,10 +129,10 @@ impl MessageClient {
             let users=res.into_iter().map(|p|{
                 (cstr!(p.nickname),p.sessionid)
             }).collect::<Vec<_>>();
-            let userx= users.iter().map(|(nickname,session_id)|{
-                (nickname.as_str(),*session_id).into()
+            let c_user= users.iter().map(|(nickname,session_id)|{
+                (nickname.as_str(),session_id).into()
             }).collect::<Vec<_>>();
-            callback.call(FFISlice::from_slice(&userx));
+            callback.call(FFISlice::from_slice(&c_user));
             Ok(())
         })
     }

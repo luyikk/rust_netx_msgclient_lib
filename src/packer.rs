@@ -29,11 +29,11 @@ pub struct CUser<'a>{
     pub session_id: i64,
 }
 
-impl<'a> From<(&'a str,i64)> for CUser<'a> {
-    fn from((nickname,session_id): (&'a str, i64)) -> Self {
+impl<'a> From<(&'a str,&i64)> for CUser<'a> {
+    fn from((nickname,session_id): (&'a str, &i64)) -> Self {
        Self{
            nickname: AsciiPointer::from_slice_with_nul(nickname.as_bytes()).unwrap(),
-           session_id
+           session_id:*session_id
        }
     }
 }
