@@ -20,3 +20,29 @@ fn bindings_csharp() -> Result<(), Error> {
 
     Ok(())
 }
+
+#[test]
+fn bindings_c() -> Result<(), Error> {
+    use interoptopus_backend_c::{Config, Generator};
+
+    Generator::new(
+        Config {
+            ifndef: "example_hello_world".to_string(),
+            ..Config::default()
+        },
+        inventory(),
+    )
+        .write_file("netx_client_msg.h")?;
+
+    Ok(())
+}
+
+#[test]
+fn bindings_cpython_cffi() -> Result<(), Error> {
+    use interoptopus_backend_cpython::{Config, Generator};
+
+    let library = inventory();
+    Generator::new(Config::default(), library).write_file("netx_client_msg.py")?;
+
+    Ok(())
+}

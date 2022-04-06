@@ -137,6 +137,21 @@ impl MessageClient {
         })
     }
 
+    /// message to all online users
+    pub fn talk(&self,msg:AsciiPointer)->Result<()>{
+        self.runtime.block_on(async move{
+            let server: Box<dyn IServer> = impl_interface!(self.client=>IServer);
+            server.talk(msg.as_str()?).await
+        })
+    }
+
+    /// message to target user
+    pub fn to(&self,target: AsciiPointer, msg: AsciiPointer)->Result<()>{
+        self.runtime.block_on(async move{
+            let server: Box<dyn IServer> = impl_interface!(self.client=>IServer);
+            server.to(target.as_str()?,msg.as_str()?).await
+        })
+    }
 
     //----------------------------
 }

@@ -17,9 +17,9 @@ namespace rust_run
         static Interop()
         {
             var api_version = Interop.my_api_guard();
-            if (api_version != 5313379100334502205ul)
+            if (api_version != 18090071391434528273ul)
             {
-                throw new TypeLoadException($"API reports hash {api_version} which differs from hash in bindings (5313379100334502205). You probably forgot to update / copy either the bindings or the library.");
+                throw new TypeLoadException($"API reports hash {api_version} which differs from hash in bindings (18090071391434528273). You probably forgot to update / copy either the bindings or the library.");
             }
         }
 
@@ -97,6 +97,30 @@ namespace rust_run
 
         public static void get_users_checked(IntPtr context, GetUsersCallBack callback) {
             var rval = get_users(context, callback);;
+            if (rval != NetXFFIError.Ok)
+            {
+                throw new InteropException<NetXFFIError>(rval);
+            }
+        }
+
+        /// message to all online users
+        [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "talk")]
+        public static extern NetXFFIError talk(IntPtr context, string msg);
+
+        public static void talk_checked(IntPtr context, string msg) {
+            var rval = talk(context, msg);;
+            if (rval != NetXFFIError.Ok)
+            {
+                throw new InteropException<NetXFFIError>(rval);
+            }
+        }
+
+        /// message to target user
+        [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "to")]
+        public static extern NetXFFIError to(IntPtr context, string target, string msg);
+
+        public static void to_checked(IntPtr context, string target, string msg) {
+            var rval = to(context, target, msg);;
             if (rval != NetXFFIError.Ok)
             {
                 throw new InteropException<NetXFFIError>(rval);
@@ -251,6 +275,26 @@ namespace rust_run
         public void GetUsers(GetUsersCallBack callback)
         {
             var rval = Interop.get_users(_context, callback);
+            if (rval != NetXFFIError.Ok)
+            {
+                throw new InteropException<NetXFFIError>(rval);
+            }
+        }
+
+        /// message to all online users
+        public void Talk(string msg)
+        {
+            var rval = Interop.talk(_context, msg);
+            if (rval != NetXFFIError.Ok)
+            {
+                throw new InteropException<NetXFFIError>(rval);
+            }
+        }
+
+        /// message to target user
+        public void To(string target, string msg)
+        {
+            var rval = Interop.to(_context, target, msg);
             if (rval != NetXFFIError.Ok)
             {
                 throw new InteropException<NetXFFIError>(rval);

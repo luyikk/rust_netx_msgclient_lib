@@ -16,5 +16,7 @@ log="0.4"
 env_logger = "0.8.2"
 interoptopus="0.14"
 interoptopus_backend_csharp = "0.14"
+interoptopus_backend_cpython="0.14"
+interoptopus_backend_c="0.14"
 netxclient = "1.6"
 serde = { version = "1.0", features = ["derive"] }

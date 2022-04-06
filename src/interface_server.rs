@@ -11,9 +11,9 @@ pub trait IServer {
     #[tag(1001)]
     async fn get_users(&self) -> Result<Vec<User>>;
     #[tag(1002)]
-    async fn talk(&self, msg: String) -> Result<()>;
+    async fn talk(&self, msg: &str) -> Result<()>;
     #[tag(1003)]
-    async fn to(&self, target: String, msg: String) -> Result<()>;
+    async fn to(&self, target: &str, msg: &str) -> Result<()>;
     #[tag(1004)]
-    async fn ping(&self, target: String, time: i64) -> Result<i64>;
+    async fn ping(&self, target: &str, time: i64) -> Result<i64>;
 }
