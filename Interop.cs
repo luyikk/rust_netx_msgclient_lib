@@ -17,9 +17,9 @@ namespace rust_run
         static Interop()
         {
             var api_version = Interop.my_api_guard();
-            if (api_version != 18090071391434528273ul)
+            if (api_version != 15882080617704689528ul)
             {
-                throw new TypeLoadException($"API reports hash {api_version} which differs from hash in bindings (18090071391434528273). You probably forgot to update / copy either the bindings or the library.");
+                throw new TypeLoadException($"API reports hash {api_version} which differs from hash in bindings (15882080617704689528). You probably forgot to update / copy either the bindings or the library.");
             }
         }
 
@@ -127,6 +127,18 @@ namespace rust_run
             }
         }
 
+        /// ping
+        [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "ping")]
+        public static extern NetXFFIError ping(IntPtr context, string target, long time, PingCallBack callback);
+
+        public static void ping_checked(IntPtr context, string target, long time, PingCallBack callback) {
+            var rval = ping(context, target, time, callback);;
+            if (rval != NetXFFIError.Ok)
+            {
+                throw new InteropException<NetXFFIError>(rval);
+            }
+        }
+
     }
 
     [Serializable]
@@ -209,7 +221,10 @@ namespace rust_run
     public delegate void GetUsersCallBack(SliceUser x0);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate bool LogOnCallBack(bool x0, string x1);
+    public delegate bool LogOnCallBack(byte x0, string x1);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void PingCallBack(string x0, long x1);
 
 
     /// netx message lib
@@ -295,6 +310,16 @@ namespace rust_run
         public void To(string target, string msg)
         {
             var rval = Interop.to(_context, target, msg);
+            if (rval != NetXFFIError.Ok)
+            {
+                throw new InteropException<NetXFFIError>(rval);
+            }
+        }
+
+        /// ping
+        public void Ping(string target, long time, PingCallBack callback)
+        {
+            var rval = Interop.ping(_context, target, time, callback);
             if (rval != NetXFFIError.Ok)
             {
                 throw new InteropException<NetXFFIError>(rval);

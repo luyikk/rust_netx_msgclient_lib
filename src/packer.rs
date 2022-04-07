@@ -9,7 +9,7 @@ pub struct LogOn {
     pub nickname: String,
 }
 
-#[derive(Deserialize, Serialize, Default)]
+#[derive(Deserialize, Serialize, Default,Debug)]
 #[repr(C)]
 pub struct LogOnRes {
     pub success: bool,

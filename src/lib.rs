@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use crate::controller::ClientController;
 use crate::interface_server::{IServer, ___impl_IServer_call};
-use crate::packer::{LogOn,CUser};
+use crate::packer::{LogOn, CUser};
 use anyhow::Result;
 use interoptopus::patterns::string::AsciiPointer;
 use interoptopus::{
@@ -16,10 +16,11 @@ use interoptopus::{
 };
 use interoptopus::patterns::api_guard::APIVersion;
 use interoptopus::patterns::slice::FFISlice;
-use log::LevelFilter;
+use log::{debug, LevelFilter};
 use netxclient::client::{DefaultSessionStore, NetXClient, ServerOption};
 use netxclient::prelude::*;
 use tokio::runtime::Runtime;
+use tokio::task::JoinHandle;
 
 
 #[ffi_function]
@@ -41,8 +42,9 @@ macro_rules! cstr {
     };
 }
 
-callback!(LogOnCallBack(success: bool, msg: AsciiPointer)->bool);
+callback!(LogOnCallBack(success: u8, msg: AsciiPointer)->bool);
 callback!(GetUsersCallBack(users:FFISlice<CUser>));
+callback!(PingCallBack(target: AsciiPointer,time:i64));
 
 #[ffi_service(error = "NetXFFIError")]
 impl MessageClient {
@@ -98,20 +100,22 @@ impl MessageClient {
     ///     ret:bool
     #[ffi_service_method(on_panic = "return_default")]
     pub fn login(&self, nickname: AsciiPointer, callback: LogOnCallBack) -> bool {
-        let res:Result<bool>=self.runtime.block_on(async move {
+        let res=self.runtime.block_on(async move {
             let server: Box<dyn IServer> = impl_interface!(self.client=>IServer);
-            let res = server
+            server
                 .login(LogOn {
                     nickname: nickname.as_str()?.to_string(),
                 })
-                .await?;
-            Ok(callback.call(
-                res.success,
-                AsciiPointer::from_slice_with_nul(cstr!(res.msg).as_bytes())?,
-            ))
+                .await
         });
         match res{
-            Ok(v)=>v,
+            Ok(v)=>{
+                debug!("LogOn res:{:?}",v);
+                callback.call(
+                    if v.success{1}else{0},
+                    AsciiPointer::from_slice_with_nul(cstr!(v.msg).as_bytes()).unwrap(),
+                )
+            },
             Err(err)=>{
                 log::error!("error:{}",err);
                 false
@@ -121,20 +125,20 @@ impl MessageClient {
 
     /// get all online users
     pub fn get_users(&self,callback:GetUsersCallBack)->Result<()>{
-        self.runtime.block_on(async move {
+        let users= self.runtime.block_on(async move {
             let server: Box<dyn IServer> = impl_interface!(self.client=>IServer);
-            let res = server
+            server
                 .get_users()
-                .await?;
-            let users=res.into_iter().map(|p|{
-                (cstr!(p.nickname),p.sessionid)
-            }).collect::<Vec<_>>();
-            let c_user= users.iter().map(|(nickname,session_id)|{
-                (nickname.as_str(),session_id).into()
-            }).collect::<Vec<_>>();
-            callback.call(FFISlice::from_slice(&c_user));
-            Ok(())
-        })
+                .await
+        })?;
+        let users=users.into_iter().map(|p|{
+            (cstr!(p.nickname),p.sessionid)
+        }).collect::<Vec<_>>();
+        let c_user= users.iter().map(|(nickname,session_id)|{
+            (nickname.as_str(),session_id).into()
+        }).collect::<Vec<_>>();
+        callback.call(FFISlice::from_slice(&c_user));
+        Ok(())
     }
 
     /// message to all online users
@@ -152,6 +156,20 @@ impl MessageClient {
             server.to(target.as_str()?,msg.as_str()?).await
         })
     }
+
+    /// ping
+    pub fn ping(&self,target:AsciiPointer,time:i64,callback:PingCallBack)->Result<()> {
+        let target = target.as_str()?.to_string();
+        let client = self.client.clone();
+        let _: JoinHandle<Result<()>> = self.runtime.spawn(async move {
+            let server = impl_struct!(client=>IServer);
+            let time = server.ping(&target, time).await?;
+            callback.call(AsciiPointer::from_slice_with_nul(cstr!(target).as_bytes()).unwrap(), time);
+            Ok(())
+        });
+        Ok(())
+    }
+
 
     //----------------------------
 }
