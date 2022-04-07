@@ -168,6 +168,14 @@ impl MessageClient {
             Ok(())
         });
         Ok(())
+
+        // self.runtime.block_on(async move {
+        //     let target = target.as_str()?;
+        //     let server = impl_struct!(self.client=>IServer);
+        //     let time = server.ping(&target, time).await?;
+        //     callback.call(AsciiPointer::from_slice_with_nul(cstr!(target).as_bytes()).unwrap(), time);
+        //     Ok(())
+        // })
     }
 
 
